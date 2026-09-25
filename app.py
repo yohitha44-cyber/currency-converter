@@ -1,28 +1,68 @@
 import streamlit as st
-import requests
-from dateutil.parser import parse
 
-st.title("Currency Converter")
+st.set_page_config(
+    page_title="Currency Converter",
+    page_icon="💱"
+)
 
-source_currency = st.text_input("Source currency (e.g. USD)", "USD").upper()
-destination_currency = st.text_input("Destination currency (e.g. EUR)", "EUR").upper()
-amount = st.number_input("Amount", min_value=0.0, value=100.0)
+st.title("💱 Currency Converter")
 
+# Currency options
+currencies = {
+    "USD - US Dollar": "USD",
+    "INR - Indian Rupee": "INR",
+    "EUR - Euro": "EUR",
+    "GBP - British Pound": "GBP",
+    "JPY - Japanese Yen": "JPY",
+    "AUD - Australian Dollar": "AUD",
+    "CAD - Canadian Dollar": "CAD",
+    "SGD - Singapore Dollar": "SGD",
+    "AED - UAE Dirham": "AED"
+}
+
+# Select currencies
+from_currency = st.selectbox(
+    "From Currency",
+    list(currencies.keys())
+)
+
+to_currency = st.selectbox(
+    "To Currency",
+    list(currencies.keys())
+)
+
+# Amount
+amount = st.number_input(
+    "Enter Amount",
+    min_value=0.0,
+    value=1.0
+)
+
+# Convert button
 if st.button("Convert"):
-    try:
-        url = f"https://open.er-api.com/v6/latest/{source_currency}"
-        data = requests.get(url, timeout=10).json()
+    from_code = currencies[from_currency]
+    to_code = currencies[to_currency]
 
-        if data.get("result") != "success":
-            st.error("Invalid source currency or API error.")
-        else:
-            rates = data["rates"]
-            if destination_currency not in rates:
-                st.error("Invalid destination currency.")
-            else:
-                converted = rates[destination_currency] * amount
-                last_updated = parse(data["time_last_update_utc"])
-                st.success(f"{amount} {source_currency} = {converted:.2f} {destination_currency}")
-                st.caption(f"Last updated: {last_updated}")
-    except Exception as e:
-        st.error(f"Something went wrong: {e}")
+    if from_code == to_code:
+        result = amount
+    else:
+        # Sample conversion rates
+        rates = {
+            ("USD", "INR"): 83.5,
+            ("INR", "USD"): 0.012,
+            ("USD", "EUR"): 0.92,
+            ("EUR", "USD"): 1.09,
+            ("USD", "GBP"): 0.78,
+            ("GBP", "USD"): 1.28,
+            ("USD", "JPY"): 150.0,
+            ("JPY", "USD"): 0.0067,
+            ("USD", "AED"): 3.67,
+            ("AED", "USD"): 0.27,
+        }
+
+        rate = rates.get((from_code, to_code), 1)
+        result = amount * rate
+
+    st.success(
+        f"{amount:.2f} {from_code} = {result:.2f} {to_code}"
+    )
